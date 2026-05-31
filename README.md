@@ -1,0 +1,66 @@
+# ffmpeg.wasm Editor
+
+A browser-based video editor powered by [ffmpeg.wasm](https://github.com/ffmpegwasm/ffmpeg.wasm). No uploads, no servers — all processing happens locally in your browser using WebAssembly.
+
+---
+
+## Use Cases
+
+### 🎞 GIF Maker
+Convert any video clip into an animated GIF. Set the frame rate and output width; height scales automatically to preserve the aspect ratio. Uses a two-pass palette generation for the best possible colour quality.
+
+### 🔄 Video Format Converter
+Re-encode a video to a different container and codec:
+- **MP4** — H.264 + AAC, widest compatibility
+- **WebM** — VP9 + Opus, open format optimised for the web (~45% smaller than MP4 at similar quality)
+- **MKV / MOV** — H.264 + AAC in alternative containers
+- **AVI** — legacy compatibility
+
+### 🗜 Video Compression
+Reduce file size without changing the resolution. Dial in the quality with a **CRF slider** (18 = near-lossless → 51 = maximum compression) and pick an encoding **preset** (ultrafast → veryslow) to trade encoding speed for compression efficiency. A live size estimate updates as you adjust the settings.
+
+### ✂️ Video Trimming
+Set a start and end point with the timeline sliders before running any operation. Trimming is applied on top of every other operation, so you can, for example, extract a short clip, compress it, and convert it to GIF all at once.
+
+### 📐 Resize & Compress
+Change the output dimensions and compress in one pass. Width and height are auto-filled from the source video; edit either value or leave it blank to let ffmpeg maintain the aspect ratio. Combines a `scale` filter with CRF-based H.264 encoding.
+
+### 🎵 Audio Extraction
+Pull the audio track out of any video into a standalone audio file:
+- **MP3** — universal playback
+- **AAC** — efficient lossy, great for mobile
+- **WAV** — uncompressed PCM
+- **OGG Vorbis** — open lossy format
+- **FLAC** — lossless compression
+
+### 🔇 Mute Video
+Strip the audio stream entirely. Output is the original video with no audio track — useful for silent loops, social media clips, or before replacing the audio elsewhere.
+
+### ⚡ Speed Change
+Speed up or slow down playback (0.25× – 4×). Both the video PTS and the `atempo` audio filter chain are adjusted so audio pitch and sync are preserved. Chains multiple `atempo` stages automatically when the multiplier is outside the 0.5–2.0 range that a single filter accepts.
+
+---
+
+## How It Works
+
+1. Click **Load ffmpeg** — downloads the ffmpeg-core WebAssembly binary (~31 MB, cached after first load).
+2. Drop or select a video file.
+3. Optionally set trim points with the timeline sliders.
+4. Pick an operation and adjust its settings.
+5. Click **Process Video** — ffmpeg runs entirely in a Web Worker inside your browser.
+6. Preview the result and download it.
+
+All file I/O stays on your machine. Nothing is sent to any server.
+
+---
+
+## Running Locally
+
+```bash
+npm install
+npm start          # serves docs/ with the required COOP/COEP headers
+```
+
+The server sets `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp`, which are required for `SharedArrayBuffer` (used by ffmpeg.wasm).
+
+Or serve the `docs/` folder with any static server that sets those two headers.
