@@ -102,7 +102,13 @@
       width: 100%; background: var(--surface); border: 1px solid var(--border);
       border-radius: 6px; color: var(--text); padding: 7px 10px; font-size: 0.83rem; outline: none;
     }
-    input:focus, select:focus { border-color: var(--accent); }
+    textarea {
+      width: 100%; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; color: var(--text); padding: 7px 10px; font-size: 0.78rem; outline: none;
+      font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace; resize: vertical; min-height: 76px; line-height: 1.55;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+    .cmd-preview { font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace; font-size: 0.72rem; background: #080a10; color: #7dd3fc; padding: 10px 12px; border-radius: 6px; word-break: break-all; line-height: 1.6; margin-top: 4px; white-space: pre-wrap; min-height: 36px; }
     .hint { font-size: 0.72rem; color: var(--muted); margin-top: 6px; }
 
     /* ── Progress ── */
@@ -272,6 +278,7 @@
             <button class="op-tile" id="op-fade"          onclick="setOp('fade')">🌅 Fade In/Out</button>
             <button class="op-tile" id="op-adjust"        onclick="setOp('adjust')">🎨 Adjust</button>
             <button class="op-tile" id="op-stripmeta"     onclick="setOp('stripmeta')">🚫 Strip Metadata</button>
+            <button class="op-tile" id="op-raw"           onclick="setOp('raw')">🛠️ Raw FFmpeg</button>
           </div>
 
           <!-- Convert -->
@@ -509,6 +516,28 @@
             <p class="hint" style="font-size:.82rem;color:var(--text)">Removes all embedded metadata (GPS, camera info, creation date, etc.) from the output file. Video and audio are re-encoded.</p>
           </div>
 
+          <!-- Raw / Advanced -->
+          <div class="op-panel hidden" id="panel-raw">
+            <h4>Raw FFmpeg</h4>
+            <div style="margin-bottom:8px">
+              <label class="lbl">Arguments &mdash; inserted after <code style="color:var(--accent);font-size:.8em">-i input</code>, before the output filename</label>
+              <textarea id="rawArgs" placeholder="-vf scale=1280:-2 -c:v libx264 -crf 23 -preset fast -c:a aac" oninput="updateRawPreview()"></textarea>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="lbl">Output extension</label>
+                <input type="text" id="rawExt" value="mp4" placeholder="mp4" style="font-family:monospace" oninput="updateRawPreview()">
+              </div>
+              <div class="form-group" style="display:flex;align-items:center;gap:8px;padding-top:18px">
+                <input type="checkbox" id="rawBypassTrim" style="width:auto;accent-color:var(--accent)" onchange="updateRawPreview()">
+                <label class="lbl" for="rawBypassTrim" style="margin:0;cursor:pointer">Bypass trim</label>
+              </div>
+            </div>
+            <label class="lbl" style="margin-top:10px;display:block">Full command preview</label>
+            <div class="cmd-preview" id="cmdPreview">&mdash;</div>
+            <p class="hint" style="margin-top:6px">Args are split on whitespace. Wrap values containing spaces in double quotes, e.g. <code style="color:var(--accent)">-vf "scale=1280:-2,hflip"</code></p>
+          </div>
+
           <!-- Size estimate -->
           <div id="sizeEstWrap" class="size-estimate hidden">
             <span>Estimated output size</span>
@@ -599,7 +628,7 @@ let outExt    = 'mp4';
 // ── Expose to inline handlers ─────────────────────────
 Object.assign(window, {
   loadFFmpeg, handleFile, clearInput, setOp,
-  updateTrim, runProcess, download, clearLog, updateSizeEstimate
+  updateTrim, runProcess, download, clearLog, updateSizeEstimate, updateRawPreview
 });
 
 // ── Drag & drop ──────────────────────────────────────
@@ -711,6 +740,7 @@ async function handleFile(file) {
     // Auto-fill thumbnail timestamp to midpoint
     document.getElementById('thumbTime').value = (vidDur / 2).toFixed(1);
     updateSizeEstimate();
+    updateRawPreview();
   };
   document.getElementById('inputWrap').classList.remove('hidden');
   document.getElementById('dropZone').classList.add('hidden');
@@ -746,6 +776,7 @@ function updateTrim() {
   fill.style.left  = (ss / dur * 100) + '%';
   fill.style.width = ((ee - ss) / dur * 100) + '%';
   updateSizeEstimate();
+  updateRawPreview();
 }
 
 // ── Op switcher ───────────────────────────────────────
@@ -754,7 +785,9 @@ function setOp(op) {
   document.querySelectorAll('.op-tile').forEach(b => b.classList.remove('active'));
   document.getElementById('op-' + op).classList.add('active');
   document.querySelectorAll('.op-panel').forEach(p => p.classList.add('hidden'));
-  document.getElementById('panel-' + op).classList.remove('hidden');  updateSizeEstimate();
+  document.getElementById('panel-' + op).classList.remove('hidden');
+  updateSizeEstimate();
+  updateRawPreview();
 }
 
 // ── Size estimator ────────────────────────────────────────────
@@ -823,6 +856,7 @@ function updateSizeEstimate() {
     case 'adjust':   { estimated = srcSize * (dur / vidDur); break; }
     case 'stripmeta':{ estimated = srcSize * 0.99; break; }
     case 'thumbnail':{ wrap.classList.add('hidden'); return; }
+    case 'raw':       { wrap.classList.add('hidden'); return; }
     case 'crop': {
       const cx = parseInt(document.getElementById('cropX').value) || 0;
       const cy = parseInt(document.getElementById('cropY').value) || 0;
@@ -848,7 +882,48 @@ function updateSizeEstimate() {
     deltaEl.textContent = '≈ same size';
     deltaEl.className   = 'size-delta';
   }
-  wrap.classList.remove('hidden');}
+  wrap.classList.remove('hidden');
+}
+
+// ── Raw FFmpeg preview + arg parser ───────────────────
+function parseShellArgs(str) {
+  const result = [];
+  let cur = '', inQ = false, qChar = '';
+  for (const ch of str) {
+    if (inQ) {
+      if (ch === qChar) inQ = false;
+      else cur += ch;
+    } else if (ch === '"' || ch === "'") {
+      inQ = true; qChar = ch;
+    } else if (/\s/.test(ch)) {
+      if (cur) { result.push(cur); cur = ''; }
+    } else {
+      cur += ch;
+    }
+  }
+  if (cur) result.push(cur);
+  return result;
+}
+
+function updateRawPreview() {
+  if (currentOp !== 'raw') return;
+  const el = document.getElementById('cmdPreview');
+  if (!inputFile) { el.textContent = '(load a file first)'; return; }
+  const inN    = 'input.' + (inputExt || 'mp4');
+  const ext    = document.getElementById('rawExt').value.trim().replace(/^\./, '') || 'mp4';
+  const bypass = document.getElementById('rawBypassTrim').checked;
+  const trimS  = parseFloat(document.getElementById('trimStart').value) || 0;
+  const trimE  = parseFloat(document.getElementById('trimEnd').value)   || vidDur;
+  const hasTrim = !bypass && (trimS > 0 || (vidDur > 0 && trimE < vidDur - 0.05));
+  const parts = ['ffmpeg'];
+  if (hasTrim) parts.push('-ss', trimS.toFixed(3));
+  parts.push('-i', inN);
+  if (hasTrim) parts.push('-t', (trimE - trimS).toFixed(3));
+  const userArgs = parseShellArgs(document.getElementById('rawArgs').value);
+  parts.push(...userArgs);
+  parts.push('output.' + ext);
+  el.textContent = parts.join(' ');
+}
 
 // ── Process ───────────────────────────────────────────
 async function runProcess() {
@@ -999,6 +1074,17 @@ async function runProcess() {
       case 'stripmeta': {
         ext = 'mp4';
         args.push('-map_metadata','-1','-c:v','libx264','-preset','fast','-c:a','aac');
+        break;
+      }
+      case 'raw': {
+        const userArgs = parseShellArgs(document.getElementById('rawArgs').value);
+        if (!userArgs.length) throw new Error('No ffmpeg arguments entered.');
+        ext = document.getElementById('rawExt').value.trim().replace(/^\./, '') || 'mp4';
+        if (document.getElementById('rawBypassTrim').checked) {
+          args.length = 0;
+          args.push('-i', inName);
+        }
+        args.push(...userArgs);
         break;
       }
     }
