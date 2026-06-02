@@ -141,7 +141,7 @@
     .tag { font-size: 0.7rem; font-weight: 600; padding: 1px 7px; border-radius: 4px; background: rgba(99,102,241,.18); color: var(--accent); margin-left: 6px; }
 
     /* ── Responsive ── */
-    @media (max-width: 600px) {
+    @media (max-width: 480px) {
       header { padding: 10px 14px; }
       header h1 { font-size: 1rem; }
 
@@ -158,7 +158,7 @@
 
       .trim-row { flex-direction: column; gap: 6px; }
 
-      .ops-grid { grid-template-columns: 1fr 1fr; gap: 6px; }
+      .ops-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
       .op-tile { padding: 8px 6px; font-size: 0.74rem; }
 
       .form-row { gap: 6px; }
@@ -174,7 +174,7 @@
     }
 
     @media (max-width: 380px) {
-      .ops-grid { grid-template-columns: 1fr; }
+      .ops-grid { grid-template-columns: repeat(3, 1fr); }
     }
 
     /* ── Raw FFmpeg example library ── */
@@ -308,6 +308,11 @@
             <button class="op-tile" id="op-pip"           onclick="setOp('pip')"><i class="fas fa-clone"></i> Picture in Picture</button>
             <button class="op-tile" id="op-info"          onclick="setOp('info')"><i class="fas fa-circle-info"></i> Media Info</button>
             <button class="op-tile" id="op-raw"           onclick="setOp('raw')"><i class="fas fa-terminal"></i> Raw FFmpeg</button>
+            <button class="op-tile" id="op-pad"           onclick="setOp('pad')"><i class="fas fa-expand"></i> Pad / Letterbox</button>
+            <button class="op-tile" id="op-normalize"     onclick="setOp('normalize')"><i class="fas fa-wave-square"></i> Normalize Audio</button>
+            <button class="op-tile" id="op-denoise"       onclick="setOp('denoise')"><i class="fas fa-broom"></i> Denoise</button>
+            <button class="op-tile" id="op-boomerang"     onclick="setOp('boomerang')"><i class="fas fa-retweet"></i> Boomerang</button>
+            <button class="op-tile" id="op-sharpenblur"   onclick="setOp('sharpenblur')"><i class="fas fa-eye"></i> Sharpen / Blur</button>
           </div>
 
           <!-- Convert -->
@@ -775,6 +780,94 @@
             <p class="hint" style="margin-top:6px">Args are split on whitespace. Wrap values containing spaces in double quotes, e.g. <code style="color:var(--accent)">-vf "scale=1280:-2,hflip"</code></p>
           </div>
 
+          <!-- Pad / Letterbox -->
+          <div class="op-panel hidden" id="panel-pad">
+            <h4>Pad to Aspect Ratio</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="lbl">Target Ratio</label>
+                <select id="padAR">
+                  <option value="16:9">16:9 — Landscape (YouTube, TV)</option>
+                  <option value="9:16">9:16 — Portrait (Reels, Stories)</option>
+                  <option value="1:1">1:1 — Square (Instagram)</option>
+                  <option value="4:3">4:3 — Classic</option>
+                  <option value="4:5">4:5 — Portrait feed</option>
+                  <option value="21:9">21:9 — Cinematic</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="lbl">Pad Color</label>
+                <select id="padColor">
+                  <option value="black">Black</option>
+                  <option value="white">White</option>
+                  <option value="0x808080">Gray</option>
+                </select>
+              </div>
+            </div>
+            <p class="hint">Video is scaled down to fit; empty space is filled with the chosen color. Re-encodes to H.264.</p>
+          </div>
+
+          <!-- Normalize Audio -->
+          <div class="op-panel hidden" id="panel-normalize">
+            <h4>Normalize Audio (EBU R128)</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="lbl">Target Loudness</label>
+                <select id="normalizeTarget">
+                  <option value="-14">-14 LUFS — YouTube / Spotify</option>
+                  <option value="-16" selected>-16 LUFS — Podcasts / Apple</option>
+                  <option value="-23">-23 LUFS — Broadcast (EBU R128)</option>
+                </select>
+              </div>
+            </div>
+            <p class="hint">Uses the <code>loudnorm</code> filter. Video stream is copied without re-encoding.</p>
+          </div>
+
+          <!-- Denoise -->
+          <div class="op-panel hidden" id="panel-denoise">
+            <h4>Denoise (hqdn3d)</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="lbl">Strength</label>
+                <select id="denoiseStrength">
+                  <option value="light">Light</option>
+                  <option value="medium" selected>Medium</option>
+                  <option value="heavy">Heavy</option>
+                </select>
+              </div>
+            </div>
+            <p class="hint">Applies spatial + temporal noise reduction via <code>hqdn3d</code>. Higher strength = smoother but softer image.</p>
+          </div>
+
+          <!-- Boomerang -->
+          <div class="op-panel hidden" id="panel-boomerang">
+            <h4>Boomerang</h4>
+            <p class="hint" style="font-size:.82rem;color:var(--text)">Plays the clip forward then immediately in reverse — classic boomerang loop. Trim is respected. Audio is removed from the output.</p>
+          </div>
+
+          <!-- Sharpen / Blur -->
+          <div class="op-panel hidden" id="panel-sharpenblur">
+            <h4>Sharpen / Blur</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="lbl">Effect</label>
+                <select id="sbMode">
+                  <option value="sharpen">Sharpen (unsharp)</option>
+                  <option value="blur">Blur (boxblur)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="lbl">Intensity</label>
+                <select id="sbStrength">
+                  <option value="light">Light</option>
+                  <option value="medium" selected>Medium</option>
+                  <option value="heavy">Heavy</option>
+                </select>
+              </div>
+            </div>
+            <p class="hint">Sharpen uses <code>unsharp</code>; blur uses <code>boxblur</code>. Audio is copied.</p>
+          </div>
+
           <!-- Size estimate -->
           <div id="sizeEstWrap" class="size-estimate hidden">
             <span>Estimated output size</span>
@@ -1185,6 +1278,11 @@ function updateSizeEstimate() {
     case 'info':     { wrap.classList.add('hidden'); return; }
     case 'thumbnail':{ wrap.classList.add('hidden'); return; }
     case 'raw':       { wrap.classList.add('hidden'); return; }
+    case 'pad':        { estimated = srcSize * (dur / vidDur); break; }
+    case 'normalize':  { estimated = srcSize * (dur / vidDur); break; }
+    case 'denoise':    { estimated = srcSize * (dur / vidDur); break; }
+    case 'boomerang':  { estimated = srcSize * (dur / vidDur) * 2; break; }
+    case 'sharpenblur':{ estimated = srcSize * (dur / vidDur); break; }
     case 'crop': {
       const cx = parseInt(document.getElementById('cropX').value) || 0;
       const cy = parseInt(document.getElementById('cropY').value) || 0;
@@ -1596,6 +1694,59 @@ async function runProcess() {
           await ffmpeg.writeFile(in2Name, await fetchFile(rawInput2File));
         }
         args.push(...userArgs);
+        break;
+      }
+      case 'pad': {
+        const arVal = document.getElementById('padAR').value;
+        const [aw, ah] = arVal.split(':').map(Number);
+        const color   = document.getElementById('padColor').value;
+        const vidEl   = document.getElementById('inputVideo');
+        const srcW    = vidEl.videoWidth  || 1920;
+        const srcH    = vidEl.videoHeight || 1080;
+        const targetAR = aw / ah;
+        let tW, tH;
+        if (srcW / srcH > targetAR) {
+          tW = srcW;
+          tH = Math.round(srcW / targetAR / 2) * 2;
+        } else {
+          tH = srcH;
+          tW = Math.round(srcH * targetAR / 2) * 2;
+        }
+        ext = 'mp4';
+        args.push('-vf', `pad=${tW}:${tH}:(ow-iw)/2:(oh-ih)/2:${color}`, '-c:v', 'libx264', '-preset', 'fast', '-c:a', 'aac');
+        break;
+      }
+      case 'normalize': {
+        const target = document.getElementById('normalizeTarget').value;
+        ext = 'mp4';
+        args.push('-af', `loudnorm=I=${target}:LRA=11:TP=-1.5`, '-c:v', 'copy');
+        break;
+      }
+      case 'denoise': {
+        const str    = document.getElementById('denoiseStrength').value;
+        const params = { light: '2:2:3:3', medium: '4:4:6:6', heavy: '10:10:15:15' }[str];
+        ext = 'mp4';
+        args.push('-vf', `hqdn3d=${params}`, '-c:v', 'libx264', '-preset', 'fast', '-c:a', 'copy');
+        break;
+      }
+      case 'boomerang': {
+        ext = 'mp4';
+        args.push(
+          '-filter_complex', '[0:v]reverse[rv];[0:v][rv]concat=n=2:v=1:a=0[outv]',
+          '-map', '[outv]', '-an',
+          '-c:v', 'libx264', '-preset', 'fast'
+        );
+        break;
+      }
+      case 'sharpenblur': {
+        const mode = document.getElementById('sbMode').value;
+        const str  = document.getElementById('sbStrength').value;
+        const vfMap = {
+          sharpen: { light: 'unsharp=3:3:0.8:3:3:0', medium: 'unsharp=5:5:1.5:5:5:0', heavy: 'unsharp=7:7:3:7:7:0' },
+          blur:    { light: 'boxblur=3:1', medium: 'boxblur=6:1', heavy: 'boxblur=12:1' },
+        };
+        ext = 'mp4';
+        args.push('-vf', vfMap[mode][str], '-c:v', 'libx264', '-preset', 'fast', '-c:a', 'copy');
         break;
       }
     }
