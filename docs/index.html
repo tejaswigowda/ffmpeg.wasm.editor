@@ -307,12 +307,13 @@
             <button class="op-tile" id="op-sxs"           onclick="setOp('sxs')"><i class="fas fa-table-columns"></i> Side by Side</button>
             <button class="op-tile" id="op-pip"           onclick="setOp('pip')"><i class="fas fa-clone"></i> Picture in Picture</button>
             <button class="op-tile" id="op-info"          onclick="setOp('info')"><i class="fas fa-circle-info"></i> Media Info</button>
-            <button class="op-tile" id="op-raw"           onclick="setOp('raw')"><i class="fas fa-terminal"></i> Raw FFmpeg</button>
             <button class="op-tile" id="op-pad"           onclick="setOp('pad')"><i class="fas fa-expand"></i> Pad / Letterbox</button>
             <button class="op-tile" id="op-normalize"     onclick="setOp('normalize')"><i class="fas fa-wave-square"></i> Normalize Audio</button>
             <button class="op-tile" id="op-denoise"       onclick="setOp('denoise')"><i class="fas fa-broom"></i> Denoise</button>
             <button class="op-tile" id="op-boomerang"     onclick="setOp('boomerang')"><i class="fas fa-retweet"></i> Boomerang</button>
             <button class="op-tile" id="op-sharpenblur"   onclick="setOp('sharpenblur')"><i class="fas fa-eye"></i> Sharpen / Blur</button>
+                        <button class="op-tile" id="op-raw"           onclick="setOp('raw')"><i class="fas fa-terminal"></i> Raw FFmpeg</button>
+
           </div>
 
           <!-- Convert -->
@@ -1590,7 +1591,7 @@ async function runProcess() {
         if (hasTrim) args.push('-ss', trimS.toFixed(3), '-t', (trimE - trimS).toFixed(3));
         args.push('-i', inName, '-i', logoName);
         args.push(
-          '-filter_complex', `[1:v]scale=${logoW}:-1[logo];[0:v][logo]overlay=${pos}`,
+          '-filter_complex', `[1:v]scale=${logoW}:-2[logo];[0:v][logo]overlay=${pos}`,
           '-c:a', 'copy'
         );
         break;
@@ -1640,8 +1641,8 @@ async function runProcess() {
         args.length = 0;
         args.push('-i', inName, '-i', sxsName);
         const sxsFc = sxsLayout === 'h'
-          ? `[0:v]scale=-1:${sxsDim}[v1];[1:v]scale=-1:${sxsDim}[v2];[v1][v2]hstack=inputs=2[out]`
-          : `[0:v]scale=${sxsDim}:-1[v1];[1:v]scale=${sxsDim}:-1[v2];[v1][v2]vstack=inputs=2[out]`;
+          ? `[0:v]scale=-2:${sxsDim}[v1];[1:v]scale=-2:${sxsDim}[v2];[v1][v2]hstack=inputs=2[out]`
+          : `[0:v]scale=${sxsDim}:-2[v1];[1:v]scale=${sxsDim}:-2[v2];[v1][v2]vstack=inputs=2[out]`;
         args.push('-filter_complex', sxsFc, '-map', '[out]');
         if (sxsAudio === 'none') {
           args.push('-an');
@@ -1665,7 +1666,7 @@ async function runProcess() {
         if (hasTrim) args.push('-ss', trimS.toFixed(3), '-t', (trimE - trimS).toFixed(3));
         args.push('-i', inName, '-stream_loop', '-1', '-i', pipName);
         args.push(
-          '-filter_complex', `[1:v]scale=${pipW}:-1[pip];[0:v][pip]overlay=${pipPos}[out]`,
+          '-filter_complex', `[1:v]scale=${pipW}:-2[pip];[0:v][pip]overlay=${pipPos}[out]`,
           '-map', '[out]', '-map', '0:a?',
           '-c:v', 'libx264', '-preset', 'fast', '-c:a', 'aac', '-shortest'
         );
@@ -1794,7 +1795,8 @@ async function runProcess() {
     await ffmpeg.deleteFile(outName).catch(() => {});
 
   } catch (err) {
-    addLog('Error: ' + err.message, 'err');
+    const errMsg = (err instanceof Error ? err.message : String(err)) || 'unknown error';
+    addLog('Error: ' + errMsg, 'err');
     // Still try to clean up FS on error
     try { await ffmpeg.deleteFile(inName); } catch (_) {}
     try { await ffmpeg.deleteFile('output.' + outExt); } catch (_) {}
