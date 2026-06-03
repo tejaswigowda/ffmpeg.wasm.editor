@@ -134,7 +134,7 @@ Displays key metadata extracted from the browser's video element immediately whe
 
 Click **Process Video** to run a **deep scan** (`ffmpeg -hide_banner -i …`) and print full codec, stream, pixel format, and container details to the log panel below.
 
-### �🛠 Raw FFmpeg
+### 🛠 Raw FFmpeg
 Full access to the ffmpeg command line directly in the browser. Type any arguments into the text area; they are inserted after `-i input` and before the output filename. Choose the output file extension and optionally bypass the trim range. A live **full command preview** updates as you type, showing the exact command that will be executed. Quoted values containing spaces are handled correctly.
 
 An **Example Commands** library (collapsible) provides one-click recipes to get started:
@@ -273,3 +273,9 @@ Or serve the `docs/` folder with any static server that sets those two headers:
 # Alternative: using npx serve
 npx serve docs
 ```
+
+---
+
+## License
+
+This project is licensed under the **GNU General Public License v3.0** (GPL-3.0). See the [LICENSE](LICENSE) file for full details.
