@@ -2,6 +2,22 @@
 
 A browser-based video editor powered by [ffmpeg.wasm](https://github.com/ffmpegwasm/ffmpeg.wasm). <b><ins>No uploads, no servers -- all processing happens locally</ins></b> in your browser using WebAssembly.
 
+🚀 **Live app:** https://tejaswigowda.com/ffmpeg.wasm.editor/
+
+---
+
+## Key Features
+
+- ✅ **No Server Uploads** — All video processing happens entirely on your device
+- ✅ **30+ Video Operations** — GIF creation, format conversion, compression, trimming, effects, filters, and more
+- ✅ **Offline-First PWA** — Works completely offline after first use; install as a native app
+- ✅ **Screen Wake Lock** — Screen stays active during video processing on any device
+- ✅ **Live Previews** — See output size estimates and live settings adjustments
+- ✅ **Multi-Format Support** — MP4, WebM, MKV, MOV, AVI, GIF, MP3, AAC, WAV, OGG, FLAC, JPG, PNG
+- ✅ **Advanced Features** — Raw ffmpeg command access, subtitle embedding, concatenation, picture-in-picture, audio mixing
+- ✅ **Fast & Responsive** — Uses Web Workers for background processing
+- ✅ **Privacy First** — Zero data collection; works with your files locally
+
 ---
 
 ## Use Cases
@@ -198,6 +214,7 @@ Video is re-encoded to H.264; audio is stream-copied.
 
 ## How It Works
 
+**Local Processing:**
 1. Click **Load ffmpeg** -- downloads the ffmpeg-core WebAssembly binary (~31 MB, cached after first load).
 2. Drop or select a video file. The **Process Video** button activates; if ffmpeg is not yet loaded it reads **Load ffmpeg & Process** and will download it automatically on first click.
 3. Optionally set trim points with the timeline sliders.
@@ -207,28 +224,36 @@ Video is re-encoded to H.264; audio is stream-copied.
 
 All file I/O stays on your machine. Nothing is sent to any server.
 
+**Performance & Reliability:**
+- Video processing runs in background workers — the UI stays responsive
+- Screen automatically stays active during long encoding operations
+- Service worker caches all static assets and CDN resources for instant offline access
+- Failed operations automatically clean up virtual filesystem
+
 ---
 
 ## 📱 Progressive Web App (PWA)
 
-The editor works **completely offline** with intelligent caching:
+The editor works **completely offline** with intelligent caching and screen wake lock support:
 
 ### Features
-- **🔌 Install as App** — Click the install button to add the editor to your home screen or app drawer. Works on desktop and mobile.
+- **🔌 Install as App** — Use the browser's native install button to add the app to your home screen or app drawer. Works on desktop and mobile.
 - **📦 Offline Support** — Once ffmpeg is loaded and cached, all processing works without an internet connection.
 - **⚡ Smart Caching**
   - Static assets (HTML, CSS, JS) are cached on first load
   - ffmpeg.wasm library and dependencies are cached from CDN for offline use
   - Service worker intercepts requests and serves from cache when network is unavailable
+- **📱 Screen Wake Lock** — The screen automatically stays on during video processing. Prevents device sleep or lock on mobile and desktop during encoding.
 - **🌐 Works Everywhere**
   - Chrome, Edge, Firefox, Safari on desktop
   - Chrome, Firefox, Samsung Internet on Android
   - Safari on iOS (iOS PWA support is limited but available)
 
 ### How to Use as PWA
-1. **Web browser:** Visit the app → look for the install button (appears in top-right or in browser menu)
-2. **Install:** Click the button → confirm installation → app appears as a standalone app
-3. **Offline mode:** Load ffmpeg once online, then work offline without internet connection
+1. **Web browser:** Visit the app at https://tejaswigowda.com/ffmpeg.wasm.editor/
+2. **Install:** Click the install button in your browser's address bar or menu → confirm installation
+3. **Use offline:** Load ffmpeg once online, then work offline without internet connection
+4. **Screen stays active:** Processing automatically keeps your screen on to prevent interruptions
 
 ---
 
