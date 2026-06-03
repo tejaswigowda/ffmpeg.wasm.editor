@@ -1,6 +1,6 @@
 {
   "name": "ffmpeg webCLI",
-  "short_name": "webCLI",
+  "short_name": "ffmpeg webCLI",
   "description": "A progressive web app for video editing with ffmpeg.wasm",
   "start_url": "./",
   "scope": "./",
