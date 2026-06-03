@@ -47,6 +47,7 @@ async function load({ coreURL, wasmURL }) {
 
   // Dynamic import — import.meta.url inside ffmpeg-core.js resolves to the
   // CDN base URL, so any of its own relative imports work correctly.
+  // The service worker intercepts three-bvh-csg requests and serves a local shim.
   const mod = await import(/* @vite-ignore */ coreURL);
   const createFFmpegCore = mod.default;
   if (!createFFmpegCore) throw new Error('createFFmpegCore not found in ' + coreURL);

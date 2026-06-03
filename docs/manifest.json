@@ -1,0 +1,67 @@
+{
+  "name": "FFmpeg Video Editor",
+  "short_name": "Video Editor",
+  "description": "A progressive web app for video editing with ffmpeg.wasm",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#0d0f1a",
+  "background_color": "#0d0f1a",
+  "categories": ["productivity", "utilities"],
+  "screenshots": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%230d0f1a' width='192' height='192'/><text x='50%' y='50%' text-anchor='middle' dy='.3em' fill='%235f7fe8' font-size='24' font-weight='bold'>Video Editor</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect fill='%230d0f1a' width='512' height='512'/><text x='50%' y='50%' text-anchor='middle' dy='.3em' fill='%235f7fe8' font-size='64' font-weight='bold'>Video Editor</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "form_factor": "wide"
+    }
+  ],
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%235f7fe8' width='192' height='192' rx='45'/><path d='M60 80l48-28v96L60 120z' fill='%230d0f1a'/></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%235f7fe8' width='192' height='192' rx='45'/><path d='M60 80l48-28v96L60 120z' fill='%230d0f1a'/></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect fill='%235f7fe8' width='512' height='512' rx='120'/><path d='M160 210l128-75v256L160 320z' fill='%230d0f1a'/></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect fill='%235f7fe8' width='512' height='512' rx='120'/><path d='M160 210l128-75v256L160 320z' fill='%230d0f1a'/></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Load Editor",
+      "short_name": "Editor",
+      "description": "Open the video editor",
+      "url": "/?mode=editor",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'><rect fill='%235f7fe8' width='96' height='96' rx='22'/><path d='M30 40l24-14v48L30 60z' fill='%230d0f1a'/></svg>",
+          "sizes": "96x96",
+          "type": "image/svg+xml"
+        }
+      ]
+    }
+  ]
+}

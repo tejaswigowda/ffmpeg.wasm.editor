@@ -209,6 +209,29 @@ All file I/O stays on your machine. Nothing is sent to any server.
 
 ---
 
+## 📱 Progressive Web App (PWA)
+
+The editor works **completely offline** with intelligent caching:
+
+### Features
+- **🔌 Install as App** — Click the install button to add the editor to your home screen or app drawer. Works on desktop and mobile.
+- **📦 Offline Support** — Once ffmpeg is loaded and cached, all processing works without an internet connection.
+- **⚡ Smart Caching**
+  - Static assets (HTML, CSS, JS) are cached on first load
+  - ffmpeg.wasm library and dependencies are cached from CDN for offline use
+  - Service worker intercepts requests and serves from cache when network is unavailable
+- **🌐 Works Everywhere**
+  - Chrome, Edge, Firefox, Safari on desktop
+  - Chrome, Firefox, Samsung Internet on Android
+  - Safari on iOS (iOS PWA support is limited but available)
+
+### How to Use as PWA
+1. **Web browser:** Visit the app → look for the install button (appears in top-right or in browser menu)
+2. **Install:** Click the button → confirm installation → app appears as a standalone app
+3. **Offline mode:** Load ffmpeg once online, then work offline without internet connection
+
+---
+
 ## Running Locally
 
 ```bash
@@ -219,4 +242,9 @@ node server.js          # serves docs/ with the required COOP/COEP headers
 
 The server sets `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp`, which are required for `SharedArrayBuffer` (used by ffmpeg.wasm).
 
-Or serve the `docs/` folder with any static server that sets those two headers.
+Or serve the `docs/` folder with any static server that sets those two headers:
+
+```bash
+# Alternative: using npx serve
+npx serve docs
+```

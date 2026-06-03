@@ -3,7 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0d0f1a">
+  <meta name="description" content="A progressive web app for video editing with ffmpeg.wasm. 100% local processing, no data leaves your browser.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Video Editor">
   <title>Video Editor -- ffmpeg.wasm</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%235f7fe8' width='192' height='192' rx='45'/><path d='M60 80l48-28v96L60 120z' fill='%230d0f1a'/></svg>">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%235f7fe8' width='192' height='192' rx='45'/><path d='M60 80l48-28v96L60 120z' fill='%230d0f1a'/></svg>">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
   <style>
     :root {
@@ -1892,6 +1900,56 @@ function mime(ext) {
 // Init trim display
 updateTrim();
 initRawExamples();
+
+// ── Service Worker Registration ─────────────────────────────────
+// Register service worker for offline support and caching
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', async () => {
+    try {
+      const registration = await navigator.serviceWorker.register('/service-worker.js', {
+        scope: '/',
+        updateViaCache: 'none',
+      });
+      console.log('[PWA] Service Worker registered:', registration);
+      
+      // Check for updates periodically
+      setInterval(async () => {
+        try {
+          await registration.update();
+        } catch (err) {
+          console.error('[PWA] Update check failed:', err);
+        }
+      }, 60000); // Check every 60 seconds
+      
+      // Handle new service worker
+      registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing;
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            // New service worker is ready, show update notification
+            console.log('[PWA] New version available');
+            addLog('ℹ️ New version available - reload to update', 'ok');
+          }
+        });
+      });
+      
+      // Log offline/online status
+      window.addEventListener('online', () => {
+        console.log('[PWA] Back online');
+        addLog('✅ Back online', 'ok');
+      });
+      
+      window.addEventListener('offline', () => {
+        console.log('[PWA] Going offline');
+        addLog('⚠️ Offline - working with cached resources', 'warn');
+      });
+    } catch (err) {
+      console.error('[PWA] Service Worker registration failed:', err);
+    }
+  });
+} else {
+  console.warn('[PWA] Service Workers not supported');
+}
 </script>
 </body>
 </html>

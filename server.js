@@ -66,6 +66,22 @@ const server = http.createServer((req, res) => {
     // Allow CDN resources (jsDelivr) to load inside the isolated context
     res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
 
+    // ── Cache headers for PWA offline support ──
+    const baseName = path.basename(filePath);
+    if (baseName === 'service-worker.js' || baseName === 'manifest.json') {
+      // Don't cache service worker and manifest to ensure updates
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    } else if (baseName === 'index.html') {
+      // Cache index for short period to enable offline access
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+    } else if (filePath.endsWith('.js') || filePath.endsWith('.css')) {
+      // Cache app resources longer
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    } else {
+      // Cache static assets long-term
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+    }
+
     res.setHeader('Content-Type',   mime(filePath));
     res.setHeader('Content-Length', stat.size);
     res.writeHead(200);
