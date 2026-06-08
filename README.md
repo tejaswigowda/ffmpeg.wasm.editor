@@ -12,15 +12,15 @@ A browser-based video editor powered by [ffmpeg.wasm](https://github.com/ffmpegw
 
 <img src='demos/features.png'>
 
-- ✓ **No Server Uploads** — All video processing happens entirely on your device
-- ✓ **30+ Video Operations** — GIF creation, format conversion, compression, trimming, effects, filters, and more
-- ✓ **Offline-First PWA** — Works completely offline after first use; install as a native app
-- ✓ **Screen Wake Lock** — Screen stays active during video processing on any device
-- ✓ **Live Previews** — See output size estimates and live settings adjustments
-- ✓ **Multi-Format Support** — MP4, WebM, MKV, MOV, AVI, GIF, MP3, AAC, WAV, OGG, FLAC, JPG, PNG
-- ✓ **Advanced Features** — Raw ffmpeg command access, subtitle embedding, concatenation, picture-in-picture, audio mixing
-- ✓ **Fast & Responsive** — Uses Web Workers for background processing
-- ✓ **Privacy First** — Zero data collection; works with your files locally
+✓ **No Server Uploads** — All video processing happens entirely on your device
+✓ **30+ Video Operations** — GIF creation, format conversion, compression, trimming, effects, filters, and more
+✓ **Offline-First PWA** — Works completely offline after first use; install as a native app
+✓ **Screen Wake Lock** — Screen stays active during video processing on any device
+✓ **Live Previews** — See output size estimates and live settings adjustments
+✓ **Multi-Format Support** — MP4, WebM, MKV, MOV, AVI, GIF, MP3, AAC, WAV, OGG, FLAC, JPG, PNG
+✓ **Advanced Features** — Raw ffmpeg command access, subtitle embedding, concatenation, picture-in-picture, audio mixing
+✓ **Fast & Responsive** — Uses Web Workers for background processing
+✓ **Privacy First** — Zero data collection; works with your files locally
 
 ---
 
