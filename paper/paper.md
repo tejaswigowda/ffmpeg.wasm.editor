@@ -63,10 +63,10 @@ as a PWA and works offline thereafter, removing this barrier entirely.
 # Architecture
 
 The tool is built on `ffmpeg.wasm` [@ffmpegwasm], which compiles FFmpeg to
-WebAssembly via Emscripten [@emscripten]. Figure 1 shows the overall
+WebAssembly via Emscripten [@emscripten]. \autoref{fig:arch} shows the overall
 architecture.
 
-![Web-CLI architecture: the WASM binary executes in a Web Worker with no network access. Files are read from and written to the user's device only.](architecture.svg)
+![ffmpeg-webCLI architecture: the WASM binary executes in a Web Worker with no network access. Files are read from and written to the user's device only.\label{fig:arch}](architecture.svg){ height=10cm }
 
 The key architectural decisions are:
 
@@ -147,6 +147,6 @@ offline PWA.
 This project is built on `ffmpeg.wasm` by the ffmpegwasm contributors
 [@ffmpegwasm], which is itself built on FFmpeg [@ffmpeg]. The author thanks
 the open source community for contributions, feedback, and the first external
-pull request from @luispa.
+pull request from \@luispa.
 
 # References
