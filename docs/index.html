@@ -1140,8 +1140,8 @@ let stackSeq  = 0;
 const CHAINABLE = new Set(['crop','resizecompress','rotate','adjust','fade','denoise','sharpenblur','speed','pad','volume']);
 const STACK_ICON = { crop:'fa-crop-simple', resizecompress:'fa-compress', rotate:'fa-rotate-right', adjust:'fa-sliders', fade:'fa-circle-half-stroke', denoise:'fa-broom', sharpenblur:'fa-eye', speed:'fa-bolt', pad:'fa-expand', volume:'fa-volume-high' };
 
-// Operations unsupported in batch mode (multi-input, whole-file special handling, or informational)
-const BATCH_UNSUPPORTED = new Set(['crop', 'concat', 'sxs', 'pip', 'mixaudio', 'overlay', 'subtitles', 'boomerang', 'info', 'raw']);
+// Operations unsupported in batch mode (multi-input, memory-intensive buffering, whole-file special handling, or informational)
+const BATCH_UNSUPPORTED = new Set(['crop', 'concat', 'sxs', 'pip', 'mixaudio', 'overlay', 'subtitles', 'reverse', 'boomerang', 'info', 'raw']);
 
 // ── Batch mode state ─────────────────────────────────
 let batchMode = false;

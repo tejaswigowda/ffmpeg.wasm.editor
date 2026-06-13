@@ -86,14 +86,15 @@ When you click **Process Queue**, ffmpeg runs through each file sequentially. Th
 
 **Graceful Fallback:** If you have a video already loaded and enable batch mode, the app automatically adds it to the queue so you don't lose your work.
 
-**Supported Operations in Batch Mode** (26 total):
-- All single-input filters: Resize, Speed, Fade, Denoise, Sharpen/Blur, Adjust, Grayscale, Rotate/Flip, Volume, Pad, Audio Extract, Mute, Strip Metadata, Reverse, Loop, Normalize Audio
+**Supported Operations in Batch Mode** (25 total):
+- All single-input filters: Resize, Speed, Fade, Denoise, Sharpen/Blur, Adjust, Grayscale, Rotate/Flip, Volume, Pad, Audio Extract, Mute, Strip Metadata, Loop, Normalize Audio
 - Format conversion and compression across all output formats (MP4, WebM, MKV, MOV, AVI, GIF, MP3, AAC, WAV, OGG, FLAC)
 
-**Unsupported in Batch Mode** (operations require per-file configuration or multi-input coordination):
+**Unsupported in Batch Mode** (operations require per-file configuration, multi-input coordination, or cause memory constraints):
 - **Crop** : Dimension-dependent; different videos may need different crop values
 - **Overlay** (Logo) : Requires selecting a separate image file for each batch item
 - **Multi-input ops** : Concatenate, Side by Side, Picture in Picture, Mix Audio, Embed Subtitles
+- **Memory-intensive** : Reverse (requires full-video buffering + re-encoding; with multiple large files in batch, risks hitting the 2GB memory ceiling and crashing)
 - **Whole-file effects** : Boomerang (special reversal effect)
 - **Informational** : Media Info (displays metadata, doesn't process)
 - **Unpredictable** : Raw FFmpeg (user-defined commands differ per file)
@@ -147,7 +148,7 @@ Trim the frame to a specific region. X/Y offset and width/height are auto-filled
 Pull a single frame from any point in the video and save it as a **JPEG** or **PNG** image. The timestamp field is pre-filled to the midpoint of the loaded clip.
 
 ### ⟲ Reverse
-Play the video (and audio) backwards using ffmpeg's `reverse` + `areverse` filters. **Supported in batch mode** — reverses each video independently without re-encoding overhead.
+Play the video (and audio) backwards using ffmpeg's `reverse` + `areverse` filters. The reverse filter buffers the entire video into memory for processing, which combined with re-encoding makes it memory-intensive. Works in single mode; **not supported in batch mode** to prevent memory exhaustion when processing multiple large files (risk of hitting the 2GB WebAssembly heap limit).
 
 ### ▨ Fade In / Out
 Add a smooth fade-in, fade-out, or both. Set the duration in seconds for each direction independently; the filter is applied after any trim.
@@ -169,7 +170,7 @@ Video and audio are stream-copied (zero quality loss, near-instant). Hard-burnin
 Boost or reduce the audio level of any video. A single slider sets the **volume multiplier** (0 = silence, 1.0 = unchanged, up to 4×). Audio is re-encoded using the `volume` filter; the video stream is stream-copied (no quality loss, no re-encode overhead).
 
 ### ⟲ Loop / Repeat
-Play the video N times back-to-back in a single output file. Set **Total plays** (2–50); ffmpeg uses `-stream_loop` with stream copy so there is no re-encoding and the output file is proportionally larger. Trim is not applied for this operation. **Supported in batch mode** — each video loops independently with no re-encoding, making it ideal for batch processing repeated content.
+Play the video N times back-to-back in a single output file. Set **Total plays** (2–50); ffmpeg uses `-stream_loop` with stream copy so there is no re-encoding and the output file is proportionally larger. Trim is not applied for this operation. **Supported in batch mode** — each video loops independently with minimal memory overhead, making it safe and efficient for batch processing repeated content.
 
 ### ▭ Logo / Image Overlay
 Stamp a logo, watermark, or any image (PNG with transparency works best) onto every frame. Controls:
