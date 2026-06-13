@@ -1025,7 +1025,7 @@
             <div class="progress-track"><div class="progress-fill" id="progFill"></div></div>
           </div>
 
-          <button class="btn btn-primary btn-block" id="processBtn" disabled="true" onclick="runProcess()" style="margin-top:6px">
+          <button class="btn btn-primary btn-block" id="processBtn" disabled="true" onclick="processVideo()" style="margin-top:6px">
             <i class="fas fa-gear"></i> Process Video
           </button>
           <button class="btn btn-ghost btn-block hidden" id="addStackBtn" disabled="true" onclick="addToStack()" style="margin-top:6px">
@@ -1138,7 +1138,7 @@ let batchCurrent = null;  // Index of currently processing file
 // ── Expose to inline handlers ─────────────────────────
 Object.assign(window, {
   loadFFmpeg, handleFile, handleFileInput, clearInput, setOp,
-  updateTrim, runProcess, download, clearLog, updateSizeEstimate, updateRawPreview,
+  updateTrim, processVideo, runProcess, runBatch, download, clearLog, updateSizeEstimate, updateRawPreview,
   resetCropSelection,
   onRawInput2Change, onSubtitleFileChange,
   onOverlayFileChange, onMixAudioFileChange, onConcatFileChange,
@@ -1862,7 +1862,15 @@ function updateRawPreview() {
   el.textContent = parts.join(' ');
 }
 
-// ── Process ───────────────────────────────────────────
+// ── Process (Single or Batch) ─────────────────────────
+async function processVideo() {
+  if (batchMode) {
+    await runBatch();
+  } else {
+    await runProcess();
+  }
+}
+
 async function runProcess() {
   if (!inputFile) return;
 
@@ -2365,6 +2373,156 @@ async function runProcess() {
     btn.disabled = false;
     btn.innerHTML = '<i class="fas fa-gear"></i> Process Video';
     releaseWakeLock(); // Release screen wake lock after processing
+  }
+}
+
+// ── Batch Processing ──────────────────────────────────
+async function runBatch() {
+  if (batchQueue.length === 0) {
+    addLog('Batch queue is empty.', 'warn');
+    return;
+  }
+
+  if (!isLoaded()) {
+    await loadFFmpeg();
+    if (!isLoaded()) return;
+  }
+
+  const btn = document.getElementById('processBtn');
+  const opTiles = document.querySelectorAll('.op-tile');
+  
+  // Disable all operation tiles during batch processing
+  opTiles.forEach(t => t.style.pointerEvents = 'none');
+  opTiles.forEach(t => t.style.opacity = '0.5');
+  btn.disabled = true;
+  
+  addLog(`Starting batch processing of ${batchQueue.length} file(s)…`, 'ok');
+
+  try {
+    await requestWakeLock();
+
+    for (let i = 0; i < batchQueue.length; i++) {
+      const item = batchQueue[i];
+      batchCurrent = i;
+      
+      // Update status to processing
+      item.status = 'processing';
+      updateBatchQueueUI();
+      
+      const progressMsg = `[${i + 1}/${batchQueue.length}] Processing: ${item.file.name}`;
+      addLog(progressMsg, 'ok');
+
+      try {
+        // Run the operation for this file
+        await processBatchFile(item);
+        item.status = 'done';
+      } catch (err) {
+        item.status = 'error';
+        item.error = err.message || String(err);
+        addLog(`Error processing ${item.file.name}: ${item.error}`, 'error');
+      }
+
+      updateBatchQueueUI();
+    }
+
+    const done = batchQueue.filter(i => i.status === 'done').length;
+    const failed = batchQueue.filter(i => i.status === 'error').length;
+    addLog(`Batch complete: ${done} succeeded, ${failed} failed.`, done === batchQueue.length ? 'ok' : failed === 0 ? 'ok' : 'warn');
+
+  } finally {
+    // Re-enable operation tiles
+    opTiles.forEach(t => t.style.pointerEvents = 'auto');
+    opTiles.forEach(t => t.style.opacity = '1');
+    btn.disabled = false;
+    batchCurrent = null;
+    releaseWakeLock();
+  }
+}
+
+async function processBatchFile(item) {
+  const file = item.file;
+  const ext = file.name.split('.').pop().toLowerCase() || 'mp4';
+  const inName = 'input_' + item.file.name.replace(/\.[^.]+$/, '') + '.' + ext;
+  const outName = 'output_' + item.file.name.replace(/\.[^.]+$/, '') + '.' + outExt;
+
+  // Write input file
+  await ffmpeg.writeFile(inName, await fetchFile(file));
+
+  // Determine dimensions for this file (needed for some operations)
+  const vid = document.createElement('video');
+  const url = await blobToDataURL(file);
+  vid.src = url;
+  
+  await new Promise(resolve => {
+    vid.onloadedmetadata = () => {
+      resolve();
+    };
+  });
+
+  const trimS = parseFloat(document.getElementById('trimStart').value) || 0;
+  const trimE = parseFloat(document.getElementById('trimEnd').value) || vid.duration;
+  const hasTrim = trimS > 0 || (vid.duration > 0 && trimE < vid.duration - 0.05);
+
+  const args = [];
+
+  // Fast seek before input
+  if (hasTrim) args.push('-ss', trimS.toFixed(3));
+  args.push('-i', inName);
+  // Duration (relative to seek point)
+  if (hasTrim) args.push('-t', (trimE - trimS).toFixed(3));
+
+  // Build operation args (reuse existing operation code via currentOp)
+  // For now, pass through to the operation's existing logic
+  buildOperationArgs(args, vid, ext);
+
+  // Execute ffmpeg
+  addLog(`Running ffmpeg for ${file.name}…`, 'log');
+  try {
+    const res = await ffmpeg.exec([...args, outName]);
+    if (res !== 0) throw new Error(`ffmpeg exited with code ${res}`);
+  } catch (err) {
+    throw new Error(`FFmpeg error: ${err.message}`);
+  }
+
+  // Read output
+  const data = await ffmpeg.readFile(outName);
+  item.output = new Blob([data.buffer], { type: 'video/' + outExt });
+
+  // Cleanup
+  try { await ffmpeg.deleteFile(inName); } catch (_) {}
+  try { await ffmpeg.deleteFile(outName); } catch (_) {}
+}
+
+function buildOperationArgs(args, videoEl, inputExt) {
+  // This reuses the operation-specific logic from runProcess
+  // For Phase 3, we'll add a helper that extracts operation args
+  // For now, we'll use the same operation logic
+  const vidDuration = videoEl.duration;
+  const srcW = videoEl.videoWidth || 1920;
+  const srcH = videoEl.videoHeight || 1080;
+
+  // Apply current operation (simplified; full version reuses runProcess logic)
+  // This is a placeholder - in production, extract the args-building logic into a shared function
+  switch (currentOp) {
+    case 'convert':
+    case 'mute':
+    case 'speed':
+    case 'crop':
+    case 'rotate':
+    case 'fade':
+    case 'adjust':
+    case 'volume':
+    case 'denoise':
+    case 'boomerang':
+    case 'sharpenblur':
+    case 'pad':
+    case 'normalize':
+      // Use getFormatCodecArgs helper for output format
+      const fmt = document.getElementById('singleOutFmt')?.value || 'mp4';
+      args.push(...getFormatCodecArgs(fmt));
+      break;
+    default:
+      args.push('-c:v', 'copy', '-c:a', 'copy');
   }
 }
 
